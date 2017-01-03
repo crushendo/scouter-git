@@ -1,0 +1,169 @@
+{% extends 'layouts/base.html' %} 
+{% block title %}Report - {{ block.super }}{% endblock %} 
+
+{% block header %}
+
+<style>
+    select {
+       margin-left: 1vw;
+    }
+</style>
+
+
+
+{% endblock %}
+
+{% block content %}
+
+<form method="POST" action="report">
+    {% csrf_token %}
+    <h5 style="margin-bottom:0.5vh">
+            &nbsp; Location:
+    </h5>
+    <select name="location" id="location" onchange="alert('blah');fu()">
+        <option value="default">Select a location</option>
+        <option value="Labelle">Labelle</option>
+    </select>
+    <br>
+    <h5 style="margin-bottom:0.5vh">
+            &nbsp; Scouted Item:
+    </h5>
+    <select name="scoutedItem" id="scoutedItem">
+        <option value="default">Make a selection</option>
+    </select>
+
+    <h5 style="margin-bottom:0.5vh">
+            &nbsp; Start Date:
+    </h5>
+    <div class="container" style="margin-left:0%;">
+        <div class="input-group date" data-provide="datepicker-inline" data-date-today-highlight="true" style="width:15vw;margin-top:1vh;position:relative;float:left;">
+            <input type="text" id="startDate" name="startDate" style='width:20vw' readonly="true" value="Date">
+        </div>
+    </div>
+    <h5 style="margin-bottom:0.5vh">
+            &nbsp; End Date:
+    </h5>
+    <div class="container" style="margin-left:0%;">
+        <div class="input-group date" data-provide="datepicker-inline" data-date-today-highlight="true" style="width:15vw;margin-top:1vh;position:relative;float:left;">
+            <input type="text" id="endDate" name="endDate" style='width:20vw' readonly="true" value="Date">
+        </div>
+    </div>
+    <br>
+    <input type="submit" class="btn btn-primary" value="Submit" style="float: left;margin-left:10%;width: 150px;">
+ 
+<script type="text/javascript">
+    function fu() {
+        selectedLocation = document.getElementById('location').value
+        
+        // Setting CSRF Token for AJAX POST Request
+        var name = 'csrftoken';
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        var csrftoken = cookieValue;
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+        // Send all data and keys in localStorage to backend via AJAX
+        alert("jnen")
+        $.ajax({
+            type: 'POST',
+            url: '/report',
+            data: {
+                'selectedLocation': selectedLocation,
+            },
+            success: fillSelection,
+        }) 
+    }
+</script>
+</form>
+
+
+
+<script type="text/javascript">
+    // Runs on successful AJAX request and Django processing of request
+    // Redirects page
+    function fillSelection(scoutingList, strLen) {
+        document.getElementById("scoutedItem").options.length = 0;
+        var select = document.getElementById('scoutedItem');
+        select.options[select.options.length] = new Option("Make a selection", "Make a selection");
+        alert(typeof(scoutingList))
+        alert(scoutingList)
+        alert('strLen = ' + strLen)
+        
+        if(scoutingList.indexOf(',') != -1){
+            var scoutingArray = scoutingList.split(',')
+            var length = scoutingArray.length
+            for(var ii = 0; ii < length; ii++){
+                selectIter = scoutingArray[ii];
+                select.options[select.options.length] = new Option(selectIter, selectIter);
+            }
+        }
+        else{
+            select.options[select.options.length] = new Option(scoutingList, scoutingList);
+        };  
+    }
+</script>
+
+<script>
+    var picker = new Pikaday({ field: document.getElementById('datepicker') });
+</script>
+
+<script type="text/javascript">
+        var picker = new Pikaday(
+        {
+            field: document.getElementById('startDate'),
+            firstDay: 1,
+            minDate: new Date(2000, 0, 1),
+            format: 'MM/DD/YYYY',
+            yearRange: [2000,2020]
+        });
+        var picker2 = new Pikaday(
+            {
+                field: document.getElementById('endDate'),
+                firstDay: 1,
+                minDate: new Date(2000, 0, 1),
+                format: 'MM/DD/YYYY',
+                yearRange: [2000,2020]
+            });
+</script>
+
+<!-- Autofills the current date in the date box -->
+<script type="text/javascript">
+    function getDate() {
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth()+1; //January is 0!
+        var yyyy = today.getFullYear();
+        if(dd<10) {
+            dd='0'+dd
+        } 
+        if(mm<10) {
+            mm='0'+mm
+        } 
+        today = mm+'/'+dd+'/'+yyyy;
+        document.getElementById("startDate").value = today;
+        document.getElementById("endDate").value = today;
+      }
+</script>
+
+<script type="text/javascript">
+    window.onload = function pageLoad(){
+        getDate();
+    }
+</script>
+
+{% endblock %}

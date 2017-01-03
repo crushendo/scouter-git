@@ -1,0 +1,404 @@
+{% extends 'layouts/base.html' %} 
+{% block title %} Young - {{ block.super }}{% endblock %} 
+
+{% block header %}
+<header>
+    <style>
+        p{
+            font-size: 5vw;
+            text-align: center; 
+        }
+    </style>
+    
+    <style>
+        #TAD{
+        width: 150px;
+        margin-top: 8vh;
+        margin-right: 3%;
+        }    
+    </style>
+    
+    <style>
+        #TAD1 {
+            height: 19vh;
+            display: table-cell;
+            margin-left: 3%;
+            vertical-align: middle;
+            margin-top: 3vh;
+            width:80px;
+            line-height: 6vh;
+            
+        }
+    </style>
+    
+    <style>
+        #container{
+            margin-top: 2%;
+            width: 90vw;
+            height: 25vh;
+            
+        }
+    </style>
+    
+     <style>
+        .checkbox{
+            margin-left: 5vw; !important
+            
+        }
+    </style>
+    
+    <style>
+        label{
+            font-size: 6vw; 
+            text-align: left;
+        }
+    </style>
+    
+    <style>
+        .btn-default, .btn-default:hover, .btn-default:focus,  .btn-default.active, .open>.dropdown-toggle.btn-default {
+            color: none;
+            background-color: none;
+            background-image: none;
+            appearance: none;
+            box-shadow: none;
+            border-color: none; /*set the color you want here*/
+        }
+    </style>
+    
+    <script type="text/javascript">
+        function syncData() {
+            // Save all inputs to localStorage
+            var formdate = moment("{{ formDate }}").format('YYYY-MM-DD');
+            var formField = "{{ formField }}";
+            var formStop = "{{ formStop }}";
+            var key = [];
+            
+            key[0] = formdate.concat(',',formField,',',formStop,',',"Adults");
+            key[1] = formdate.concat(',',formField,',',formStop,',',"Eggs");
+            key[2] = formdate.concat(',',formField,',',formStop,',',"Leafminer");
+            key[3] = formdate.concat(',',formField,',',formStop,',',"ODLarva");
+            key[4] = formdate.concat(',',formField,',',formStop,',',"ODEggs");
+            key[5] = formdate.concat(',',formField,',',formStop,',',"Spidermites");
+            
+            var value = [];
+            value[0] = document.getElementById("Adults").value;      
+            value[1] = document.getElementById("Eggs").value;           
+            value[2] = document.getElementById("Leafminer").value;
+            value[3] = document.getElementById("ODLarva").value;
+            value[4] = document.getElementById("ODEggs").value;
+            if(document.getElementById("none").checked){
+                value[5] = 'none'
+            }
+            
+            if(document.getElementById("low").checked){
+                value[5] = 'low'
+            }
+            if(document.getElementById("medium").checked){
+                value[5] = 'medium'
+            }
+            if(document.getElementById("high").checked){
+                value[5] = 'high'
+            }
+            // Set data in localStorage
+            var i = 0;
+            while(i < 6){
+                window.localStorage.setItem(key[i], value[i]);
+                i = i + 1;
+            }
+            
+            // Set date in correct format
+            dateTest = '10/06/15';
+            newTest = moment("{{ formDate }}").format('YYYY-MM-DD');
+        
+            // Get all data out of local storage, current and past
+            var allData = [];
+            for ( var i = 0, len = localStorage.length; i < len; ++i ) {
+                allData[i] = localStorage.getItem(localStorage.key(i));
+            }
+            
+            // Get all keys out of local storage, current and past
+            var allKeys = [];
+            var keyCounter = 0;
+            for (var key in localStorage){
+                allKeys[keyCounter] = key;
+                keyCounter = keyCounter + 1;
+            }
+            
+            // Setting CSRF Token for AJAX POST Request
+            var name = 'csrftoken';
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            var csrftoken = cookieValue;
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+            // Send all data and keys in localStorage to backend via AJAX
+            $.ajax({
+                type: 'POST',
+                url: '/labelle/scouting/young',
+                data: {
+                    'allData[]': allData,
+                    'allKeys[]': allKeys
+                },
+                success: checkFunction,
+            }) 
+        }
+        
+    </script>
+    
+    <script>
+        // Runs on successful AJAX request and Django processing of request
+        // Redirects page
+        function checkFunction(message) {
+            // TODO: now clear localStorage, not earlier
+            localStorage.clear();
+            window.location = "/labelle/scouting/young";
+        }
+    </script>
+    
+</header>
+{% endblock %}
+
+{% block content %}
+    
+    <p> {{formDate}}: {{formField}}, {{formStop}} </p>
+   
+    <form method="POST" id="dataForm">
+        {% csrf_token %}
+        <!--Date-->
+      
+        <div class="container" style="border-style: solid;" id="container">
+            <span id="TAD1" style="float:left;display:inline-block;display:inline-block;"> Total Adult Psyllids: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  </span>
+            <span id="TAD" class="input-group pull-right" style="float:left;">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-default btn-number" data-type="minus" data-field="quant[1]">
+                      <span class="glyphicon glyphicon-minus"></span>
+                    </button>
+                </span>
+                <input id="Adults" type="tel" name="quant[1]" class="form-control input-number" value="0" min="0" max="100" style="text-align:center;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default btn-number" data-type="plus" data-field="quant[1]">
+                      <span class="glyphicon glyphicon-plus"></span>
+                  </button>
+                </span>
+            </span>
+        </div>
+        <br>
+        <div class="container" style="border-style: solid;" id="container">
+            <span id="TAD1" style="float:left;display:inline-block;display:inline-block;"> Total Eggs and Nymphs: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  </span>
+            <span id="TAD" class="input-group pull-right" style="float:left;">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-default btn-number" data-type="minus" data-field="quant[2]">
+                      <span class="glyphicon glyphicon-minus"></span>
+                    </button>
+                </span>
+                <input id="Eggs" type="tel" name="quant[2]" class="form-control input-number" value="0" min="0" max="100" style="text-align:center;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default btn-number" data-type="plus" data-field="quant[2]">
+                      <span class="glyphicon glyphicon-plus"></span>
+                  </button>
+              </span>
+            </span>
+        </div>
+        <br>
+        <div class="container" id="container" style="border-style: solid;">
+            <span id="TAD1" style="float:left;display:inline-block;"> Leafminer: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  </span>
+            <span id="TAD" class="input-group pull-right" style="float:left;">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-default btn-number" data-type="minus" data-field="quant[3]">
+                      <span class="glyphicon glyphicon-minus"></span>
+                    </button>
+                </span>
+                <input id="Leafminer" type="tel" name="quant[3]" class="form-control input-number" value="0" min="0" max="100" style="text-align:center;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default btn-number" data-type="plus" data-field="quant[3]">
+                      <span class="glyphicon glyphicon-plus"></span>
+                  </button>
+              </span>
+            </span>
+        </div>
+        <br>
+        <div class="container" id="container" style="border-style: solid;">
+            <span id="TAD1" style="float:left;display:inline-block;"> Orange Dog Larva: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  </span>
+            <span id="TAD" class="input-group pull-right" style="float:left;">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-default btn-number" data-type="minus" data-field="quant[4]">
+                      <span class="glyphicon glyphicon-minus"></span>
+                    </button>
+                </span>
+                <input id="ODLarva" type="tel" name="quant[4]" class="form-control input-number" value="0" min="0" max="100" style="text-align:center;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default btn-number" data-type="plus" data-field="quant[4]">
+                      <span class="glyphicon glyphicon-plus"></span>
+                  </button>
+              </span>
+            </span>
+        </div>
+        <br>
+        <div class="container" id="container" style="border-style: solid;">
+            <span id="TAD1" style="float:left;display:inline-block;"> Orange Dog Eggs: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  </span>
+            <span id="TAD" class="input-group pull-right" style="float:left;">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-default btn-number" data-type="minus" data-field="quant[5]">
+                      <span class="glyphicon glyphicon-minus"></span>
+                    </button>
+                </span>
+                <input id="ODEggs" type="tel" name="quant[5]" class="form-control input-number" value="0" min="0" max="100" style="text-align:center;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default btn-number" data-type="plus" data-field="quant[5]">
+                      <span class="glyphicon glyphicon-plus"></span>
+                  </button>
+              </span>
+            </span>
+        </div>
+        
+         <p> &nbsp; </p>
+        
+        <p style="margin-left:10vw;text-decoration: underline;"> Spider Mites </p>
+        
+        <div style="margin-left:10vw;padding:0" class="container">
+            <label for="none"><input type="radio" value="None" name="spiderMites" checked="checked" id="none" > &nbsp; &nbsp; None</label>
+        </div>
+        <div style="margin-left:10vw;">
+            <label for="low"><input type="radio" value="low" name="spiderMites" id="low" style="margin-top:5vw;"> &nbsp; &nbsp;  Low</label>
+            <a href="../../../static/img/orange-dog.jpg" data-lightbox="OD" data-title="Orange Dog"><img src="../../../static/img/info-icon.png" alt="info" width="4%" height="4%" style="vertical-align: top; margin-top: 2vh"></a>
+        </div>
+        <div style="margin-left:10vw;">
+          <label for="medium"><input type="radio" value="medium" name="spiderMites" id="medium" style="margin-top:5vw;"> &nbsp; &nbsp;  Medium</label>
+            <a href="../../../static/img/spider-mite.jpg" data-lightbox="SM" data-title="Spider Mite"><img src="../../../static/img/info-icon.png" alt="info" width="4%" height="4%" style="vertical-align: top; margin-top: 2vh"></a>
+        </div>
+        <div style="margin-left:10vw;">
+          <label for="high"><input type="radio" value="high" name="spiderMites" id="high" style="margin-top:5vw;"> &nbsp; &nbsp; High</label>
+            <a href="../../../static/img/leafminer.jpg" data-lightbox="LM" data-title="Leafminer Damage"><img src="../../../static/img/info-icon.png" alt="info" width="4%" height="4%" style="vertical-align: top; margin-top: 2vh"></a>
+        </div>
+        
+        <p> &nbsp; </p>
+        
+        <input type="button" onclick="syncData()" class="btn btn-primary" value="Submit" style="float: right;margin-right:5%;width: 150px;">
+        
+        <input type="button" onclick="location.href = '/labelle/scouting/young';" class="btn btn-primary" value="Cancel" style="float: right;margin-right:5%;width: 150px;">
+        
+        <p> &nbsp; </p>
+        
+    </form>
+    <!-- Controlls +/- boxes for the number input -->
+    <script>
+        //plugin bootstrap minus and plus
+        //http://jsfiddle.net/laelitenetwork/puJ6G/
+        $('.btn-number').click(function(e){
+            e.preventDefault();
+
+            fieldName = $(this).attr('data-field');
+            type      = $(this).attr('data-type');
+            var input = $("input[name='"+fieldName+"']");
+            var currentVal = parseInt(input.val());
+            if (!isNaN(currentVal)) {
+                if(type == 'minus') {
+
+                    if(currentVal > input.attr('min')) {
+                        input.val(currentVal - 1).change();
+                    } 
+                    if(parseInt(input.val()) == input.attr('min')) {
+                        $(this).attr('disabled', true);
+                    }
+
+                } else if(type == 'plus') {
+
+                    if(currentVal < input.attr('max')) {
+                        input.val(currentVal + 1).change();
+                    }
+                    if(parseInt(input.val()) == input.attr('max')) {
+                        $(this).attr('disabled', true);
+                    }
+
+                }
+            } else {
+                input.val(0);
+            }
+        });
+        $('.input-number').focusin(function(){
+           $(this).data('oldValue', $(this).val());
+        });
+        $('.input-number').change(function() {
+
+            minValue =  parseInt($(this).attr('min'));
+            maxValue =  parseInt($(this).attr('max'));
+            valueCurrent = parseInt($(this).val());
+
+            name = $(this).attr('name');
+            if(valueCurrent >= minValue) {
+                $(".btn-number[data-type='minus'][data-field='"+name+"']").removeAttr('disabled')
+            } else {
+                alert('Sorry, the minimum value was reached');
+                $(this).val($(this).data('oldValue'));
+            }
+            if(valueCurrent <= maxValue) {
+                $(".btn-number[data-type='plus'][data-field='"+name+"']").removeAttr('disabled')
+            } else {
+                alert('Sorry, the maximum value was reached');
+                $(this).val($(this).data('oldValue'));
+            }
+
+
+        });
+        $(".input-number").keydown(function (e) {
+                // Allow: backspace, delete, tab, escape, enter and .
+                if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 190]) !== -1 ||
+                     // Allow: Ctrl+A
+                    (e.keyCode == 65 && e.ctrlKey === true) || 
+                     // Allow: home, end, left, right
+                    (e.keyCode >= 35 && e.keyCode <= 39)) {
+                         // let it happen, don't do anything
+                         return;
+                }
+                // Ensure that it is a number and stop the keypress
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+        });
+    </script> 
+    
+    <script type="text/javascript">
+        window.onload = function pastData(){
+            var flag = "{{pastFlag}}"
+            if(flag == 'True'){
+                document.getElementById("Adults").value = "{{pastAdults}}"
+                document.getElementById("Eggs").value = "{{pastEggs}}"
+                document.getElementById("Leafminer").value = "{{pastLeafminer}}"
+                document.getElementById("ODEggs").value = "{{pastODEggs}}"
+                document.getElementById("ODLarva").value = "{{pastODLarva}}"
+                if("{{pastSpiderMites}}" == "none"){
+                    document.getElementById("none").checked = true;
+                }
+                if("{{pastSpiderMites}}" == "low"){
+                    document.getElementById("low").checked = true;
+                }
+                if("{{pastSpiderMites}}" == "medium"){
+                    document.getElementById("medium").checked = true;
+                }
+                if("{{pastSpiderMites}}" == "high"){
+                    document.getElementById("high").checked = true;
+                }
+            }
+        }
+    </script>
+    
+     <!-- Saves inputs to localStorage with unique keys, and submits all localStorage data to backend-->
+    
+
+{% endblock %}
+

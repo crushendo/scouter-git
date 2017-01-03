@@ -1,0 +1,388 @@
+{% extends 'layouts/base.html' %} 
+{% block title %} Mature - {{ block.super }}{% endblock %} 
+
+{% block header %}
+<header>
+    <style>
+        p{
+            font-size: 5vw;
+            text-align: center; 
+        }
+    </style>
+    
+    <style>
+        #TAD{
+        width: 150px;
+        margin-top: 8vh;
+        margin-right: 3%;
+        }    
+    </style>
+    
+    <style>
+        #TAD1 {
+            height: 19vh;
+            display: table-cell;
+            margin-left: 3%;
+            vertical-align: middle;
+            margin-top: 3vh;
+            width:80px;
+            line-height: 6vh;
+            
+        }
+    </style>
+    
+    <style>
+        #container{
+            margin-top: 2%;
+            width: 90vw;
+            height: 25vh;
+            
+        }
+    </style>
+    
+     <style>
+        .checkbox{
+            margin-left: 20vw; !important
+            
+        }
+    </style>
+    
+    <style>
+        label{
+            font-size: 6vw; 
+            text-align: center;
+        }
+    </style>
+    
+    <style>
+        .btn-default, .btn-default:hover, .btn-default:focus,  .btn-default.active, .open>.dropdown-toggle.btn-default {
+            color: none;
+            background-color: none;
+            background-image: none;
+            appearance: none;
+            box-shadow: none;
+            border-color: none; /*set the color you want here*/
+        }
+    </style>
+    
+    <script type="text/javascript">
+        function syncData() {
+            // Save all inputs to localStorage
+            var formdate = moment("{{ formDate }}").format('YYYY-MM-DD');
+            var formField = "{{ formField }}";
+            var formStop = "{{ formStop }}";
+            var key = [];
+            
+            key[0] = formdate.concat(',',formField,',',formStop,',',"Adults");
+            key[1] = formdate.concat(',',formField,',',formStop,',',"Eggs");
+            key[2] = formdate.concat(',',formField,',',formStop,',',"Tapped");
+            key[3] = formdate.concat(',',formField,',',formStop,',',"Flush");
+            key[4] = formdate.concat(',',formField,',',formStop,',',"OD");
+            key[5] = formdate.concat(',',formField,',',formStop,',',"SM");
+            key[6] = formdate.concat(',',formField,',',formStop,',',"LM");
+            
+            var value = [];
+            value[0] = document.getElementById("Adults").value;
+            value[1] = document.getElementById("Eggs").value;
+            value[2] = document.getElementById("Tapped").value;
+            value[3] = document.getElementById("Flush").value;
+            if(document.getElementById("OD").checked){
+                value[4] = 'O'
+            }
+            else{
+                value[4] = 'X'
+            }
+            if(document.getElementById("SM").checked){
+                value[5] = 'O'
+            }
+            else{
+                value[5] = 'X'
+            }
+            if(document.getElementById("LM").checked){
+                value[6] = 'O'
+            }
+            else{
+                value[6] = 'X'
+            }
+            
+            // Set data in localStorage
+            var i = 0;
+            while(i < 7){
+                window.localStorage.setItem(key[i], value[i]);
+                i = i + 1;
+            }
+            
+            // Set date in correct format
+            dateTest = '10/06/15';
+            newTest = moment("{{ formDate }}").format('YYYY-MM-DD');
+        
+            // Get all data out of local storage, current and past
+            var allData = [];
+            for ( var i = 0, len = localStorage.length; i < len; ++i ) {
+                allData[i] = localStorage.getItem(localStorage.key(i));
+            }
+            
+            // Get all keys out of local storage, current and past
+            var allKeys = [];
+            var keyCounter = 0;
+            for (var key in localStorage){
+                allKeys[keyCounter] = key;
+                keyCounter = keyCounter + 1;
+            }
+            
+            // Setting CSRF Token for AJAX POST Request
+            var name = 'csrftoken';
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            var csrftoken = cookieValue;
+            var ajaxMode = 'dataAjax'
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+            
+            // Send all data and keys in localStorage to backend via AJAX
+            $.ajax({
+                type: 'POST',
+                url: '/labelle/scouting/mature',
+                data: {
+                    'allData[]': allData,
+                    'allKeys[]': allKeys,
+                    'ajaxMode': ajaxMode,
+                },
+                success: checkFunction,
+            }) 
+        }
+        
+    </script>
+    
+    <script>
+        // Runs on successful AJAX request and Django processing of request
+        // Redirects page
+        function checkFunction(message) {
+            // TODO: now clear localStorage, not earlier
+            alert(message);
+            localStorage.clear();
+            window.location = "/labelle/scouting/mature";
+        }
+    </script>
+    
+</header>
+{% endblock %}
+
+{% block content %}
+    
+    <p> {{formDate}}: {{formField}}, {{formStop}} </p>
+    
+    <form method="POST" id="dataForm">
+        {% csrf_token %}
+        <!--Date-->
+        
+        <div class="container" style="border-style: solid;" id="container">
+            <span id="TAD1" style="float:left;display:inline-block;display:inline-block;"> Total Adult Psyllids: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  </span>
+            <span id="TAD" class="input-group pull-right" style="float:left;">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-default btn-number" data-type="minus" data-field="quant[1]">
+                      <span class="glyphicon glyphicon-minus"></span>
+                    </button>
+                </span>
+                <input id="Adults" type="tel" name="quant[1]" class="form-control input-number" value="0" min="0" max="100" style="text-align:center;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default btn-number" data-type="plus" data-field="quant[1]">
+                      <span class="glyphicon glyphicon-plus"></span>
+                  </button>
+                </span>
+            </span>
+        </div>
+        <br>
+        <div class="container" style="border-style: solid;" id="container">
+            <span id="TAD1" style="float:left;display:inline-block;display:inline-block;"> Total Eggs and Nymphs: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  </span>
+            <span id="TAD" class="input-group pull-right" style="float:left;">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-default btn-number" data-type="minus" data-field="quant[2]">
+                      <span class="glyphicon glyphicon-minus"></span>
+                    </button>
+                </span>
+                <input id="Eggs" type="tel" name="quant[2]" class="form-control input-number" value="0" min="0" max="100" style="text-align:center;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default btn-number" data-type="plus" data-field="quant[2]">
+                      <span class="glyphicon glyphicon-plus"></span>
+                  </button>
+              </span>
+            </span>
+        </div>
+        <br>
+        <div class="container" id="container" style="border-style: solid;">
+            <span id="TAD1" style="float:left;display:inline-block;"> Total Psyllids Tapped: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  </span>
+            <span id="TAD" class="input-group pull-right" style="float:left;">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-default btn-number" data-type="minus" data-field="quant[3]">
+                      <span class="glyphicon glyphicon-minus"></span>
+                    </button>
+                </span>
+                <input id="Tapped" type="tel" name="quant[3]" class="form-control input-number" value="0" min="0" max="100" style="text-align:center;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default btn-number" data-type="plus" data-field="quant[3]">
+                      <span class="glyphicon glyphicon-plus"></span>
+                  </button>
+              </span>
+            </span>
+        </div>
+        <br>
+        <div class="container" id="container" style="border-style: solid;">
+            <span id="TAD1" style="float:left;display:inline-block;"> Average Flush Per Tree: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  </span>
+            <span id="TAD" class="input-group pull-right" style="float:left;">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-default btn-number" data-type="minus" data-field="quant[4]">
+                      <span class="glyphicon glyphicon-minus"></span>
+                    </button>
+                </span>
+                <input id="Flush" type="tel" name="quant[4]" class="form-control input-number" value="0" min="0" max="100" style="text-align:center;">
+                <span class="input-group-btn">
+                  <button type="button" class="btn btn-default btn-number" data-type="plus" data-field="quant[4]">
+                      <span class="glyphicon glyphicon-plus"></span>
+                  </button>
+              </span>
+            </span>
+        </div>
+        
+         <p> &nbsp; </p>
+        
+        <div class="checkbox">
+            <label for="OD"><input type="checkbox" value="OD" id="OD" style="margin-top:5vw;"> &nbsp; &nbsp;  Orange Dog</label>
+            <a href="../../../static/img/orange-dog.jpg" data-lightbox="OD" data-title="Orange Dog"><img src="../../../static/img/info-icon.png" alt="info" width="4%" height="4%" style="vertical-align: top; margin-top: 2vh"></a>
+        </div>
+        <div class="checkbox">
+          <label for="SM"><input type="checkbox" value="SM" id="SM" style="margin-top:5vw;"> &nbsp; &nbsp;  Spider Mites</label>
+            <a href="../../../static/img/spider-mite.jpg" data-lightbox="SM" data-title="Spider Mite"><img src="../../../static/img/info-icon.png" alt="info" width="4%" height="4%" style="vertical-align: top; margin-top: 2vh"></a>
+        </div>
+        <div class="checkbox">
+          <label for="LM"><input type="checkbox" value="LM" id="LM" style="margin-top:5vw;"> &nbsp; &nbsp; Leafminer</label>
+            <a href="../../../static/img/leafminer.jpg" data-lightbox="LM" data-title="Leafminer Damage"><img src="../../../static/img/info-icon.png" alt="info" width="4%" height="4%" style="vertical-align: top; margin-top: 2vh"></a>
+        </div>
+        
+        <p> &nbsp; </p>
+        
+        <input type="button" onclick="syncData()" class="btn btn-primary" value="Submit" style="float: right;margin-right:5%;width: 150px;">
+        
+        <input type="button" onclick="location.href = '/labelle/scouting/mature';" class="btn btn-primary" value="Cancel" style="float: right;margin-right:5%;width: 150px;">
+        
+        <p> &nbsp; </p>
+        
+    </form>
+    <!-- Controlls +/- boxes for the number input -->
+    <script>
+        //plugin bootstrap minus and plus
+        //http://jsfiddle.net/laelitenetwork/puJ6G/
+        $('.btn-number').click(function(e){
+            e.preventDefault();
+
+            fieldName = $(this).attr('data-field');
+            type      = $(this).attr('data-type');
+            var input = $("input[name='"+fieldName+"']");
+            var currentVal = parseInt(input.val());
+            if (!isNaN(currentVal)) {
+                if(type == 'minus') {
+
+                    if(currentVal > input.attr('min')) {
+                        input.val(currentVal - 1).change();
+                    } 
+                    if(parseInt(input.val()) == input.attr('min')) {
+                        $(this).attr('disabled', true);
+                    }
+
+                } else if(type == 'plus') {
+
+                    if(currentVal < input.attr('max')) {
+                        input.val(currentVal + 1).change();
+                    }
+                    if(parseInt(input.val()) == input.attr('max')) {
+                        $(this).attr('disabled', true);
+                    }
+
+                }
+            } else {
+                input.val(0);
+            }
+        });
+        $('.input-number').focusin(function(){
+           $(this).data('oldValue', $(this).val());
+        });
+        $('.input-number').change(function() {
+
+            minValue =  parseInt($(this).attr('min'));
+            maxValue =  parseInt($(this).attr('max'));
+            valueCurrent = parseInt($(this).val());
+
+            name = $(this).attr('name');
+            if(valueCurrent >= minValue) {
+                $(".btn-number[data-type='minus'][data-field='"+name+"']").removeAttr('disabled')
+            } else {
+                alert('Sorry, the minimum value was reached');
+                $(this).val($(this).data('oldValue'));
+            }
+            if(valueCurrent <= maxValue) {
+                $(".btn-number[data-type='plus'][data-field='"+name+"']").removeAttr('disabled')
+            } else {
+                alert('Sorry, the maximum value was reached');
+                $(this).val($(this).data('oldValue'));
+            }
+
+
+        });
+        $(".input-number").keydown(function (e) {
+                // Allow: backspace, delete, tab, escape, enter and .
+                if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 190]) !== -1 ||
+                     // Allow: Ctrl+A
+                    (e.keyCode == 65 && e.ctrlKey === true) || 
+                     // Allow: home, end, left, right
+                    (e.keyCode >= 35 && e.keyCode <= 39)) {
+                         // let it happen, don't do anything
+                         return;
+                }
+                // Ensure that it is a number and stop the keypress
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+        });
+    </script> 
+    
+    <script type="text/javascript">
+        window.onload = function pastData(){
+            var flag = "{{pastFlag}}"
+            if(flag == 'True'){
+                document.getElementById("Adults").value = "{{pastAdults}}"
+                document.getElementById("Eggs").value = "{{pastEggs}}"
+                document.getElementById("Tapped").value = "{{pastTapped}}"
+                document.getElementById("Flush").value = "{{pastFlush}}"
+                if("{{pastOD}}" == "O"){
+                    document.getElementById("OD").checked = true;
+                }
+                if("{{pastLM}}" == "O"){
+                    document.getElementById("LM").checked = true;
+                }
+                if("{{pastSM}}" == "O"){
+                    document.getElementById("SM").checked = true;
+                }
+            }
+        }
+    </script>
+    
+     <!-- Saves inputs to localStorage with unique keys, and submits all localStorage data to backend-->
+    
+
+{% endblock %}
+

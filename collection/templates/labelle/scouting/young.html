@@ -1,0 +1,369 @@
+{% extends 'layouts/base.html' %} 
+{% block title %} Homepage - {{ block.super }}{% endblock %} 
+
+{% block header %}
+
+<script>
+    var picker = new Pikaday({ field: document.getElementById('datepicker') });
+</script>
+
+<script type="text/javascript">
+    function checkDropdowns(){
+        if(document.getElementById("SelectArea").value != "Select a Category"){
+            getSelection1();
+        }
+    }
+</script>
+<!-- Autofills the current date in the date box -->
+<script>
+    function getDate() {
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth()+1; //January is 0!
+        var yyyy = today.getFullYear();
+        if(dd<10) {
+            dd='0'+dd
+        } 
+        if(mm<10) {
+            mm='0'+mm
+        } 
+        today = mm+'/'+dd+'/'+yyyy;
+        document.getElementById("datepicker").value = today;
+      }
+</script>
+<script type="text/javascript">
+    window.onload = function pageLoad(){
+        getDate();
+        checkDropdowns();
+    }
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+<form name="form" role="form" method=POST action="young_form">
+    {% csrf_token %}
+    
+    <h5 style="margin-bottom:0.5vh">
+        &nbsp; Date:
+    </h5>
+    <div class="container" style="margin-left:0%;">
+        <div class="input-group date" data-provide="datepicker-inline" data-date-today-highlight="true" style="width:50vw;margin-top:1vh;position:relative;float:left;">
+            <input type="text" id="datepicker" name="datepicker" style='width:65vw' readonly="true" value="Date">
+        </div>
+    </div>
+    
+        
+    <h5>
+        &nbsp; Area:   
+        <p>&nbsp;&nbsp;&nbsp;&nbsp; <select id="SelectArea" name="SelectArea" onchange="getSelection1()" > 
+            <option value="Select a Category"> Select an Area </option>
+            {% for field in openAreas %}
+                <option value="{{field}}"> {{ field }} </option>
+            {% endfor %}
+        </select> </p>
+    </h5>
+    
+    <h5>
+        &nbsp; Field:   
+        <p> &nbsp;&nbsp;&nbsp;&nbsp; <select id="SelectField" name="SelectField"> 
+            <option> Select Field </option>
+        </select> </p>
+    </h5>
+    
+    <div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1000" xmlns:xlink="http://www.w3.org/1999/xlink"  id="SelectStop" preserveAspectRatio="xMidYmin meet" style="margin-left:0%"> 
+        <image id="areaImage" width="1200" height="1500" xlink:href="../../../static/img/fieldStops.svg" >
+        </image>
+        <a onclick="return NWSubmit();">
+		  <rect x="135" y="10" fill="#fff" opacity="0" width="300" height="300" />
+        </a>
+        <a onclick="return NESubmit();">
+		  <rect x="760" y="10" fill="#fff" opacity="0" width="300" height="300" />
+        </a>
+        <a onclick="return SWSubmit();">
+		  <rect x=135 y="640" fill="#fff" opacity="0" width="300" height="300" />
+        </a>
+        <a onclick="return SESubmit();">
+		  <rect x="765" y="640" fill="#fff" opacity="0" width="300" height="300" />
+        </a>
+        <a onclick="return CSubmit();">
+		  <rect x="450" y="325" fill="#fff" opacity="0" width="300" height="300" />
+        </a>
+    </svg>
+    </div>
+    
+    <map name="fieldStops">
+        <area shape="rect" coords="40,1040,260,830" href="#" title="NW" alt="NW" />
+    </map>
+    
+    <script src="../../static/js/jquery.rwdImageMaps.js"></script>
+    
+    <script type="text/javascript">
+        function getSelection1() {
+            document.getElementById("SelectField").options.length = 0;
+            var selection1 = document.getElementById("SelectArea").value;
+            var a = {{ jsonDict|safe }};
+            var selectedFields = a[selection1];
+            var FieldsList = a[selection1];
+            var length = 0;
+            for( var selected1 in FieldsList ) {
+                if( FieldsList.hasOwnProperty(selected1) ) {
+                    ++length;
+                };
+            }
+            var check = typeof FieldsList
+            var select = document.getElementById('SelectField');
+            select.options[select.options.length] = new Option("Select a Field", "Select a Field");
+            for(var ii = 0; ii < length; ii++){
+                FieldOption = FieldsList[ii];
+                if (FieldOption == ""){
+                    continue;
+                }
+                select.options[select.options.length] = new Option(FieldOption, FieldOption);
+            };  
+        } 
+    </script>
+    
+    <script type="text/javascript">
+        function NWSubmit() {
+            if(document.getElementById("SelectArea").value == "Select a Category"){
+                alert("Please select an Area.");
+                return false;
+            }
+            if(document.getElementById("SelectField").value == "Select a Field"){
+                alert("Please select a Field.");
+                return false;
+            }
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+            if(dd<10) {
+                dd='0'+dd
+            } 
+            if(mm<10) {
+                mm='0'+mm
+            } 
+            today = mm+'/'+dd+'/'+yyyy;
+            var date1 = new Date(today);
+            var selectedDate = document.getElementById("datepicker").value
+            var date2 = new Date(selectedDate)
+            if (date2 > date1){
+                alert("You cannot select a date that is in the future.");
+                return false;
+            }
+            var input = document.createElement("input");
+            input.setAttribute("type", "hidden");
+            input.setAttribute("name", "formStop");
+            input.setAttribute("id", "formStop");
+            //append to form element that you want 
+            document.getElementById("SelectStop").appendChild(input);
+            document.getElementById("formStop").value = 'NW';
+            var formStop = "NW";
+            document.forms["form"].submit();
+        }
+    </script>
+    <script type="text/javascript">
+        function NESubmit() {
+            if(document.getElementById("SelectArea").value == "Select a Category"){
+                alert("Please select an Area.");
+                return false;
+            }
+            if(document.getElementById("SelectField").value == "Select a Field"){
+                alert("Please select a Field.");
+                return false;
+            }
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+            if(dd<10) {
+                dd='0'+dd
+            } 
+            if(mm<10) {
+                mm='0'+mm
+            } 
+            today = mm+'/'+dd+'/'+yyyy;
+            var date1 = new Date(today);
+            var selectedDate = document.getElementById("datepicker").value
+            var date2 = new Date(selectedDate)
+            if (date2 > date1){
+                alert("You cannot select a date that is in the future.");
+                return false;
+            }
+            var input = document.createElement("input");
+            input.setAttribute("type", "hidden");
+            input.setAttribute("name", "formStop");
+            input.setAttribute("id", "formStop");
+            //append to form element that you want 
+            document.getElementById("SelectStop").appendChild(input);
+            document.getElementById("formStop").value = 'NE';
+            var formStop = "NE";
+            document.forms["form"].submit();
+        }
+    </script>
+    <script type="text/javascript">
+        function SWSubmit() {
+            if(document.getElementById("SelectArea").value == "Select a Category"){
+                alert("Please select an Area.");
+                return false;
+            }
+            if(document.getElementById("SelectField").value == "Select a Field"){
+                alert("Please select a Field.");
+                return false;
+            }
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+            if(dd<10) {
+                dd='0'+dd
+            } 
+            if(mm<10) {
+                mm='0'+mm
+            } 
+            today = mm+'/'+dd+'/'+yyyy;
+            var date1 = new Date(today);
+            var selectedDate = document.getElementById("datepicker").value
+            var date2 = new Date(selectedDate)
+            if (date2 > date1){
+                alert("You cannot select a date that is in the future.");
+                return false;
+            }
+            var input = document.createElement("input");
+            input.setAttribute("type", "hidden");
+            input.setAttribute("name", "formStop");
+            input.setAttribute("id", "formStop");
+            //append to form element that you want 
+            document.getElementById("SelectStop").appendChild(input);
+            document.getElementById("formStop").value = 'SW';
+            var formStop = "SW";
+            document.forms["form"].submit();
+        }
+    </script>
+    <script type="text/javascript">
+        function SESubmit() {
+            if(document.getElementById("SelectArea").value == "Select a Category"){
+                alert("Please select an Area.");
+                return false;
+            }
+            if(document.getElementById("SelectField").value == "Select a Field"){
+                alert("Please select a Field.");
+                return false;
+            }
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+            if(dd<10) {
+                dd='0'+dd
+            } 
+            if(mm<10) {
+                mm='0'+mm
+            } 
+            today = mm+'/'+dd+'/'+yyyy;
+            var date1 = new Date(today);
+            var selectedDate = document.getElementById("datepicker").value
+            var date2 = new Date(selectedDate)
+            if (date2 > date1){
+                alert("You cannot select a date that is in the future.");
+                return false;
+            }
+            var input = document.createElement("input");
+            input.setAttribute("type", "hidden");
+            input.setAttribute("name", "formStop");
+            input.setAttribute("id", "formStop");
+            //append to form element that you want 
+            document.getElementById("SelectStop").appendChild(input);
+            document.getElementById("formStop").value = 'SE';
+            var formStop = "SE";
+            document.forms["form"].submit();
+        }
+    </script>
+    <script type="text/javascript">
+        function CSubmit() {
+            if(document.getElementById("SelectArea").value == "Select a Category"){
+                alert("Please select an Area.");
+                return false;
+            }
+            if(document.getElementById("SelectField").value == "Select a Field"){
+                alert("Please select a Field.");
+                return false;
+            }
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+            if(dd<10) {
+                dd='0'+dd
+            } 
+            if(mm<10) {
+                mm='0'+mm
+            } 
+            today = mm+'/'+dd+'/'+yyyy;
+            var date1 = new Date(today);
+            var selectedDate = document.getElementById("datepicker").value
+            var date2 = new Date(selectedDate)
+            if (date2 > date1){
+                alert("You cannot select a date that is in the future.");
+                return false;
+            }
+            var input = document.createElement("input");
+            input.setAttribute("type", "hidden");
+            input.setAttribute("name", "formStop");
+            input.setAttribute("id", "formStop");
+            //append to form element that you want 
+            document.getElementById("SelectStop").appendChild(input);
+            document.getElementById("formStop").value = 'C';
+            var formStop = "C";
+            document.forms["form"].submit();
+        }
+    </script>
+    
+    <!-- JS for Pikaday https://github.com/dbushell/Pikaday, uses js, css, and moment.js -->
+    <script>
+        var picker = new Pikaday(
+        {
+            field: document.getElementById('datepicker'),
+            firstDay: 1,
+            minDate: new Date(2000, 0, 1),
+            format: 'MM/DD/YYYY',
+            yearRange: [2000,2020]
+        });
+    </script>
+    
+    <script type="text/javascript">
+        function errorHandling(){
+            if(document.getElementById("SelectArea").value == "Select a Category"){
+                alert("Please select an Area.");
+                return false;
+            }
+            if(document.getElementById("SelectField").value == "Select a Field"){
+                alert("Please select a Field.");
+                return false;
+            }
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+            if(dd<10) {
+                dd='0'+dd
+            } 
+            if(mm<10) {
+                mm='0'+mm
+            } 
+            today = mm+'/'+dd+'/'+yyyy;
+            var date1 = new Date(today);
+            var selectedDate = document.getElementById("datepicker").value
+            var date2 = new Date(selectedDate)
+            if (date2 > date1){
+                alert("You cannot select a date that is in the future.");
+                return false;
+            }
+        }
+    </script>
+    
+</form>
+{% endblock %}
